@@ -5,7 +5,7 @@ import pandas as pd
 import datetime  # For datetime objects
 import sys
 import os
-from agent import Agent
+from agent.agent import Agent
 
 CACHE_DIR = "data"
 os.makedirs(CACHE_DIR, exist_ok=True)

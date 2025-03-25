@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy runner script
 COPY runner.py /app
-COPY agent.py /app
+COPY ./agent /app/agent
 COPY ./data /app/data
 
 # Security: Run as non-root user
