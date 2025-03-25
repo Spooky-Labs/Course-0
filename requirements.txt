@@ -1,0 +1,6 @@
+backtrader==1.9.76.123
+yfinance==0.2.31
+pandas==2.1.0
+numpy==1.25.2
+matplotlib==3.7.2
+PyYAML==6.0.1
