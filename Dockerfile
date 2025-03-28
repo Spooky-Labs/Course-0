@@ -7,9 +7,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy runner script
-COPY runner.py /app
-COPY agent/agent.py /app/agent
-COPY ./data /app/data
+COPY runner.py ./workspace
+COPY ./agent/agent.py /workspace/agent
+COPY ./data /workspace/data
 
 # Security: Run as non-root user
 RUN useradd -m appuser
