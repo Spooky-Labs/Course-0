@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import backtrader as bt
 import backtrader.analyzers as btanalyzers # Import analyzers
-import yfinance as yf
 import pandas as pd
 import datetime  # For datetime objects
 import sys
@@ -17,6 +16,7 @@ from agent.agent import Agent
 # OUTPUT_FILE = "/workspace/output.json"  # Output file path
 CACHE_DIR = "data"
 OUTPUT_FILE = "./output.json"  # Output file path
+STARTING_CASH = 10000.0
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -41,11 +41,10 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
     try:
         cerebro = bt.Cerebro()
         cerebro.addstrategy(Agent, fast_period=fast_period, slow_period=slow_period)
-        cerebro.broker.setcash(10000.0)
+        cerebro.broker.setcash(STARTING_CASH)
 
         # --- Add Analyzers ---
         cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='sharpe', riskfreerate=risk_free_rate, timeframe=bt.TimeFrame.Days, compression=1) # Adjust timeframe/compression as needed
-        # cerebro.addanalyzer(btanalyzers.SortinoRatio, _name='sortino', riskfreerate=risk_free_rate) # Added Sortino
         cerebro.addanalyzer(btanalyzers.DrawDown, _name='drawdown')
         cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='trades')
         cerebro.addanalyzer(btanalyzers.Returns, _name='returns')
@@ -53,62 +52,44 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
         cerebro.addanalyzer(btanalyzers.SQN, _name='sqn') # Added SQN
         cerebro.addanalyzer(btanalyzers.AnnualReturn, _name='annualreturn') # Added AnnualReturn
 
-        # Add more analyzers here if desired (e.g., SQN)
-        # cerebro.addanalyzer(btanalyzers.SQN, _name='sqn')
-
         for symbol in symbols:
-            # Download data from cache or internet
-            cache_file = os.path.join(CACHE_DIR, f"{symbol}_{start_date}_{end_date}.pkl")
-            if not os.path.exists(cache_file):
-                # Keeping these lines for when we need to download more symbols from Yahoo Finance.
-                # Uncomment lines 48 & 49 and then comment line 52 when running outside.
-                data = yf.download(symbol, start=start_date, end=end_date)
-                data.to_pickle(cache_file)
 
-                # CRITICAL: Fail if data is not pre-cached
-                # raise FileNotFoundError(f"CRITICAL ERROR: Pre-cached data file not found: {cache_file}. Download must happen during build.")
-            else:
-                print(f"Loading cached data for {symbol} from {cache_file}")
-                data = pd.read_pickle(cache_file)
+            # Create a Data Feed
+            data_feed = bt.feeds.GenericCSVData(
+                dataname=f'data/{symbol}.csv', # Path to your CSV file
 
-            # Handle case where Yahoo returns multi-index columns
-            if isinstance(data.columns, pd.MultiIndex):
-                data.columns = [col[0] for col in data.columns]
+                # Define the column mapping - Backtrader needs to know which column is which
+                # These column numbers assume the date is column 0 (the index saved by pandas)
+                datetime=0,
+                open=1,
+                high=2,
+                low=3,
+                close=4,
+                volume=6, # Note: Volume is column 6 if Adj Close is column 5
+                openinterest=-1, # -1 indicates column is not present
+                adjusted=5, # Specify the column number for adjusted close
 
-            # Create a properly structured dataframe with standard column names
-            feed_data = pd.DataFrame(index=data.index)
+                # Specify the date format if needed (pandas usually saves in a recognizable format)
+                dtformat=('%Y-%m-%d'), # Example: 2023-10-27
 
-            # Map standard column names - ensure all required fields exist
-            if "Open" in data.columns:
-                feed_data["open"] = data["Open"]
-            if "High" in data.columns:
-                feed_data["high"] = data["High"]
-            if "Low" in data.columns:
-                feed_data["low"] = data["Low"]
-            if "Close" in data.columns:
-                feed_data["close"] = data["Close"]
-            if "Volume" in data.columns:
-                feed_data["volume"] = data["Volume"]
-
-            # Add a dummy openinterest column (required by backtrader)
-            feed_data["openinterest"] = 0
-
-            # Create PandasData feed with explicit column mapping
-            feed = bt.feeds.PandasData(dataname=feed_data, name=symbol)
-            cerebro.adddata(feed)
-
+                fromdate=datetime.datetime.strptime(start_date, '%Y-%m-%d'), # Optional: Start date
+                todate=datetime.datetime.strptime(end_date, '%Y-%m-%d')  # Optional: End date
+            )
+            cerebro.adddata(data_feed, name=f'{symbol}') # Giving it a name is good practice
+            
         # Run backtest
         print("Running backtest...")
         initial_value = cerebro.broker.getvalue()
         results = cerebro.run()
         final_value = cerebro.broker.getvalue()
-        return_pct = ((final_value - initial_value) / initial_value) * 100 if initial_value != 0 else 0
+        portfolio_return_pct = ((final_value - initial_value) / initial_value) * 100 if initial_value != 0 else 0
+        # Calculate overall portfolio return %
+        portfolio_pnl = final_value - initial_value
         print("Backtest finished.")
         
         # --- Retrieve and format analysis results ---
         strategyResult = results[0] # Get the first strategy instance
         sharpe_analysis = strategyResult.analyzers.sharpe.get_analysis()
-        # sortino_analysis = strategyResult.analyzers.sortino.get_analysis() # Get Sortino
         drawdown_analysis = strategyResult.analyzers.drawdown.get_analysis()
         trade_analysis = strategyResult.analyzers.trades.get_analysis()
         returns_analysis = strategyResult.analyzers.returns.get_analysis()
@@ -136,21 +117,21 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
         results_data["results"] = {
             "initial_value": initial_value,
             "final_value": final_value,
-            "return_pct": return_pct,
-            "annualized_return_pct": safe_get(returns_analysis, 'rannually'),
+            "portfolio_return_pct": portfolio_return_pct, # Overall portfolio return
+            "portfolio_net_pnl": portfolio_pnl,           # Overall portfolio PnL
+            "annualized_return_pct": safe_get(returns_analysis, 'rannually'), # From Returns analyzer            "annualized_return_pct": safe_get(returns_analysis, 'rannually'),
 
-            # Risk-Adjusted
+            # Risk-Adjusted (often based on overall returns)
             "sharpe_ratio": safe_get(sharpe_analysis, 'sharperatio'),
-            # "sortino_ratio": safe_get(sortino_analysis, 'sortinoratio'), # Added
             "calmar_ratio": safe_get(calmar_analysis, 'calmar'),      # Added
             "sqn": safe_get(sqn_analysis, 'sqn'),                    # Added
 
-            # Drawdown
+            # Trade Stats (Specific to Closed Trades from TradeAnalyzer)
             "max_drawdown_pct": safe_get(drawdown_analysis, ['max', 'drawdown']),
             "max_drawdown_money": safe_get(drawdown_analysis, ['max', 'moneydown']),
             "max_drawdown_duration_bars": safe_get(drawdown_analysis, ['max', 'len']), # Added duration
 
-            # Trade Stats
+            # Trade Stats (Specific to Closed Trades from TradeAnalyzer)
             "total_trades": safe_get(trade_analysis, ['total', 'total'], 0),
             "trades_open": safe_get(trade_analysis, ['total', 'open'], 0),
             "trades_closed": safe_get(trade_analysis, ['total', 'closed'], 0),
@@ -169,25 +150,35 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
 
             # Annual Returns (dictionary)
             "annual_returns": annual_return_analysis, # Added
-
         }
 
-        # --- Print Summary --- (Optional - can remove if not needed)
-        print("\n--- Backtest Summary ---")
+        # --- Updated Printing ---
+        print("\n------ Backtest Summary ------")
+        print(f"Period: {start_date} to {end_date}")
         print(f"Initial Portfolio Value: ${initial_value:.2f}")
         print(f"Final Portfolio Value: ${final_value:.2f}")
-        # ... (keep or remove other summary prints as desired) ...
-        print(f"Total Trades Closed: {results_data['results']['trades_closed']}")
-        print(f"Win Rate: {results_data['results']['win_rate_pct']:.2f}%")
-        print(f"Total Net PnL: ${results_data['results']['total_net_pnl']:.2f}")
+        print(f"Portfolio Net PnL: ${portfolio_pnl:.2f}")
+        print(f"Portfolio Return: {portfolio_return_pct:.2f}%")
         print("-" * 24)
+        print("Performance Metrics:")
+        print(f"  Sharpe Ratio: {results_data['results'].get('sharpe_ratio', 'N/A')}")
+        print(f"  Calmar Ratio: {results_data['results'].get('calmar_ratio', 'N/A')}")
+        print(f"  Max Drawdown: {results_data['results'].get('max_drawdown_pct', 'N/A'):.2f}%")
+        print(f"  Max Drawdown Duration (bars): {results_data['results'].get('max_drawdown_duration_bars', 'N/A')}")
+        print("-" * 24)
+        print("Closed Trade Analysis:")
+        print(f"  SQN (System Quality Number): {results_data['results'].get('sqn', 'N/A')}")
+        print(f"  Total Trades Closed: {results_data['results'].get('trades_closed', 'N/A')}")
+        print(f"  Win Rate: {results_data['results'].get('win_rate_pct', 'N/A'):.2f}%")
+        print(f"  Profit Factor: {results_data['results'].get('profit_factor', 'N/A')}")
+        print("-" * 30)
 
     except Exception as e:
         print(f"ERROR during backtest: {e}", file=sys.stderr)
         results_data["error"] = str(e)
         # Re-raise the exception so the script exits with an error
         raise
-    
+
     return results_data
 
 def save_results_to_json(filepath, data):
@@ -206,12 +197,11 @@ def save_results_to_json(filepath, data):
 
 
 if __name__ == "__main__":
-    # symbols = ["AAPL", "MSFT", "X", "SUN", "T", "COF", "F", "FORD"]
     with open("symbols.txt", "r") as file:
         lines = file.readlines()  # Read all lines into a list
-        symbols = [line for line in lines]
+        symbols = [line.replace("\n", "") for line in lines]
 
-    start_date = "2020-01-01"
+    start_date = "1999-11-10"
     end_date = "2025-03-25"
     # end_date = datetime.datetime.now().strftime('%Y-%m-%d') # Use current date for end
     fast_period = 10
@@ -229,7 +219,7 @@ if __name__ == "__main__":
             fast_period, slow_period,
             risk_free_rate=risk_free_rate
         )
-        # Save results to JSON
+        # Consolidate results (using overall portfolio return/pnl where appropriate)
         save_results_to_json(OUTPUT_FILE, final_results)
 
     except Exception as e:
