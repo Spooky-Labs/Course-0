@@ -58,7 +58,6 @@ UPS
 FDX
 UNP
 NSC
-CMI
 DE
 F
 GM
