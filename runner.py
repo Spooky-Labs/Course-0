@@ -79,14 +79,14 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
             cerebro.adddata(data_feed, name=f'{symbol}') # Giving it a name is good practice
             
         # Run backtest
-        print("Running backtest...")
+        # print("Running backtest...")
         initial_value = cerebro.broker.getvalue()
         results = cerebro.run()
         final_value = cerebro.broker.getvalue()
         portfolio_return_pct = ((final_value - initial_value) / initial_value) * 100 if initial_value != 0 else 0
         # Calculate overall portfolio return %
         portfolio_pnl = final_value - initial_value
-        print("Backtest finished.")
+        # print("Backtest finished.")
         
         # --- Retrieve and format analysis results ---
         strategyResult = results[0] # Get the first strategy instance
@@ -154,25 +154,25 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
         }
 
         # --- Updated Printing ---
-        print("\n------ Backtest Summary ------")
-        print(f"Period: {start_date} to {end_date}")
-        print(f"Initial Portfolio Value: ${initial_value:.2f}")
-        print(f"Final Portfolio Value: ${final_value:.2f}")
-        print(f"Portfolio Net PnL: ${portfolio_pnl:.2f}")
-        print(f"Portfolio Return: {portfolio_return_pct:.2f}%")
-        print("-" * 24)
-        print("Performance Metrics:")
-        print(f"  Sharpe Ratio: {results_data['results'].get('sharpe_ratio', 'N/A')}")
-        print(f"  Calmar Ratio: {results_data['results'].get('calmar_ratio', 'N/A')}")
-        print(f"  Max Drawdown: {results_data['results'].get('max_drawdown_pct', 'N/A'):.2f}%")
-        print(f"  Max Drawdown Duration (bars): {results_data['results'].get('max_drawdown_duration_bars', 'N/A')}")
-        print("-" * 24)
-        print("Closed Trade Analysis:")
-        print(f"  SQN (System Quality Number): {results_data['results'].get('sqn', 'N/A')}")
-        print(f"  Total Trades Closed: {results_data['results'].get('trades_closed', 'N/A')}")
-        print(f"  Win Rate: {results_data['results'].get('win_rate_pct', 'N/A'):.2f}%")
-        print(f"  Profit Factor: {results_data['results'].get('profit_factor', 'N/A')}")
-        print("-" * 30)
+        # print("\n------ Backtest Summary ------")
+        # print(f"Period: {start_date} to {end_date}")
+        # print(f"Initial Portfolio Value: ${initial_value:.2f}")
+        # print(f"Final Portfolio Value: ${final_value:.2f}")
+        # print(f"Portfolio Net PnL: ${portfolio_pnl:.2f}")
+        # print(f"Portfolio Return: {portfolio_return_pct:.2f}%")
+        # print("-" * 24)
+        # print("Performance Metrics:")
+        # print(f"  Sharpe Ratio: {results_data['results'].get('sharpe_ratio', 'N/A')}")
+        # print(f"  Calmar Ratio: {results_data['results'].get('calmar_ratio', 'N/A')}")
+        # print(f"  Max Drawdown: {results_data['results'].get('max_drawdown_pct', 'N/A'):.2f}%")
+        # print(f"  Max Drawdown Duration (bars): {results_data['results'].get('max_drawdown_duration_bars', 'N/A')}")
+        # print("-" * 24)
+        # print("Closed Trade Analysis:")
+        # print(f"  SQN (System Quality Number): {results_data['results'].get('sqn', 'N/A')}")
+        # print(f"  Total Trades Closed: {results_data['results'].get('trades_closed', 'N/A')}")
+        # print(f"  Win Rate: {results_data['results'].get('win_rate_pct', 'N/A'):.2f}%")
+        # print(f"  Profit Factor: {results_data['results'].get('profit_factor', 'N/A')}")
+        # print("-" * 30)
 
     except Exception as e:
         print(f"ERROR during backtest: {e}", file=sys.stderr)
@@ -241,5 +241,5 @@ if __name__ == "__main__":
         print(json.dumps({"error": f"JSON serialization failed: {json_e}", "partial_results": str(final_results)}))
         exit_code = 1 # Signal failure to Cloud Build
 
-    print(f"Exiting with code {exit_code}")
+    # print(f"Exiting with code {exit_code}")
     sys.exit(exit_code) # Ensure Cloud Build knows if the step succeeded or failed
