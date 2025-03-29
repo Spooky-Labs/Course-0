@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy runner script
 COPY runner.py ./workspace
+COPY symbols.txt ./workspace
 COPY ./agent/agent.py /workspace/agent
 COPY ./data /workspace/data
 
