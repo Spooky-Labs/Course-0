@@ -12,10 +12,10 @@ from agent.agent import Agent
 
 # Data directory within the container/workspace
 # This data MUST be populated during the build process, not at runtime.
-# CACHE_DIR = "/workspace/data" # Use absolute path matching build step
-# OUTPUT_FILE = "/workspace/output.json"  # Output file path
-CACHE_DIR = "data"
-OUTPUT_FILE = "./output.json"  # Output file path
+CACHE_DIR = "/workspace/data" # Use absolute path matching build step
+OUTPUT_FILE = "/workspace/output.json"  # Output file path
+# CACHE_DIR = "data"
+# OUTPUT_FILE = "./output.json"  # Output file path
 STARTING_CASH = 10000.0
 
 os.makedirs(CACHE_DIR, exist_ok=True)
