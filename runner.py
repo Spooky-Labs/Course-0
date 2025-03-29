@@ -221,19 +221,24 @@ if __name__ == "__main__":
             risk_free_rate=risk_free_rate
         )
         # Consolidate results (using overall portfolio return/pnl where appropriate)
-        save_results_to_json(OUTPUT_FILE, final_results)
+        # save_results_to_json(OUTPUT_FILE, final_results)
+        print(json.dumps(final_results, indent=None, separators=(',', ':'), default=str)) # PRINT TO STDOUT
 
-    except Exception as e:
+    except Exception as json_e:
         # If any part fails, try to save an error state (optional)
-        if not final_results: # If run_backtest failed before returning
-             final_results = { "parameters": { "symbols": symbols, "start_date": start_date, "end_date": end_date}, "error": f"Script failed early: {e}" }
-        elif not final_results.get("error"): # If run_backtest succeeded but saving failed
-             final_results["error"] = f"Failed to save results: {e}"
-        # Try saving error state (best effort)
-        try:
-            save_results_to_json(OUTPUT_FILE, final_results)
-        except:
-             print("Failed even to save error state to JSON.", file=sys.stderr)
+        # if not final_results: # If run_backtest failed before returning
+        #      final_results = { "parameters": { "symbols": symbols, "start_date": start_date, "end_date": end_date}, "error": f"Script failed early: {e}" }
+        # elif not final_results.get("error"): # If run_backtest succeeded but saving failed
+        #      final_results["error"] = f"Failed to save results: {e}"
+        # # Try saving error state (best effort)
+        # try:
+        #     save_results_to_json(OUTPUT_FILE, final_results)
+        # except:
+        #      print("Failed even to save error state to JSON.", file=sys.stderr)
+        # If JSON serialization fails, print an error message to stderr
+        print(f"FATAL: Failed to serialize results to JSON: {json_e}", file=sys.stderr)
+        # Print a basic error JSON to stdout as a fallback
+        print(json.dumps({"error": f"JSON serialization failed: {json_e}", "partial_results": str(final_results)}))
         exit_code = 1 # Signal failure to Cloud Build
 
     print(f"Exiting with code {exit_code}")
