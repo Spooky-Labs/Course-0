@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-WORKDIR /app
+WORKDIR /workspace
 
 # Install dependencies
 COPY requirements.txt .
@@ -14,9 +14,6 @@ COPY ./data /workspace/data
 # Security: Run as non-root user
 RUN useradd -m appuser
 USER appuser
-
-# These will be mounted at runtime
-# VOLUME ["/app/agent", "/app/data", "/app/results"]
 
 # Default command (will be overridden at runtime)
 CMD ["python", "runner.py"]
