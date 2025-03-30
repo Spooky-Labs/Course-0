@@ -4,4 +4,4 @@ numpy
 matplotlib
 PyYAML
 transformers
-# torch
+torch
