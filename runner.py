@@ -71,7 +71,7 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
                 adjusted=5, # Specify the column number for adjusted close
 
                 # Specify the date format if needed (pandas usually saves in a recognizable format)
-                dtformat=('%Y-%m-%d'), # Example: 2023-10-27
+                dtformat=('%Y-%m-%d %H:%M:%S%z'), # Example: 2023-10-27
 
                 fromdate=datetime.datetime.strptime(start_date, '%Y-%m-%d'), # Optional: Start date
                 todate=datetime.datetime.strptime(end_date, '%Y-%m-%d')  # Optional: End date
