@@ -8,13 +8,13 @@ import os
 import json  # Import the json library
 import math # For checking NaN
 
-from agent.agent import Agent
+from agent.agent_1 import Agent
 
 # Data directory within the container/workspace
 # This data MUST be populated during the build process, not at runtime.
-CACHE_DIR = "/workspace/data" # Use absolute path matching build step
+CACHE_DIR = "./workspace/data" # Use absolute path matching build step
 # OUTPUT_FILE = "/workspace/output.json"  # Output file path
-OUTPUT_FILE = "/output/results.json" # Path *inside* the container
+OUTPUT_FILE = "./output/results.json" # Path *inside* the container
 # CACHE_DIR = "data"
 # OUTPUT_FILE = "./output.json"  # Output file path
 STARTING_CASH = 10000.0
@@ -138,8 +138,8 @@ def run_backtest(symbols, start_date, end_date, fast_period, slow_period, risk_f
             "trades_closed": safe_get(trade_analysis, ['total', 'closed'], 0),
             "win_trades": safe_get(trade_analysis, ['won', 'total'], 0),
             "loss_trades": safe_get(trade_analysis, ['lost', 'total'], 0),
-            "win_rate_pct": (safe_get(trade_analysis, ['won', 'total'], 0) / safe_get(trade_analysis, ['total', 'closed'], 1) * 100) \
-                            if safe_get(trade_analysis, ['total', 'closed']) > 0 else 0, # Avoid division by zero
+            # "win_rate_pct": (safe_get(trade_analysis, ['won', 'total'], 0) / safe_get(trade_analysis, ['total', 'closed'], 1) * 100) \
+            #                 if safe_get(trade_analysis, ['total', 'closed']) > 0 else 0, # Avoid division by zero
             "total_net_pnl": safe_get(trade_analysis, ['pnl', 'net', 'total'], 0),
             "average_win_pnl": safe_get(trade_analysis, ['won', 'pnl', 'average'], 0),
             "average_loss_pnl": safe_get(trade_analysis, ['lost', 'pnl', 'average'], 0),
