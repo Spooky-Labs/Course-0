@@ -8,7 +8,7 @@ import os
 import json  # Import the json library
 import math # For checking NaN
 
-from agent.agent_1 import Agent
+from agent.agent import Agent
 
 # Data directory within the container/workspace
 # This data MUST be populated during the build process, not at runtime.
