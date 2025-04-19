@@ -15,6 +15,7 @@ RUN chmod -R 777 /workspace
 
 # Security: Run as non-root user
 RUN useradd -m appuser
+RUN chown -R appuser:appuser /workspace
 USER appuser
 
 # Default command (will be overridden at runtime)
