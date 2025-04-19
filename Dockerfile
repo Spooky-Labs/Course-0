@@ -11,6 +11,7 @@ COPY runner.py ./workspace
 COPY symbols.txt ./workspace
 COPY ./agent/agent.py /workspace/agent
 COPY ./data /workspace/data
+RUN chmod -R 777 /workspace
 
 # Security: Run as non-root user
 RUN useradd -m appuser
