@@ -5,6 +5,10 @@ WORKDIR /workspace
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+ENV HF_HUB_OFFLINE=1
+
+COPY huggingface.py .
+RUN python3 huggingface.py
 
 # Copy runner script
 COPY runner.py ./workspace

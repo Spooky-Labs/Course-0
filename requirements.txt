@@ -5,3 +5,5 @@ matplotlib
 PyYAML
 transformers
 torch
+huggingface_hub
+transformers[torch]
