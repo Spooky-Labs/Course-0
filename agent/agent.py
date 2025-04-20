@@ -3,6 +3,7 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import numpy as np
 
+print("Agent 1 - debug print")
 
 class Agent(bt.Strategy):
     params = (
