@@ -7,6 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY huggingface.py .
+RUN cat requirements.txt
 RUN python3 huggingface.py
 
 # Set offline ENV after we download
