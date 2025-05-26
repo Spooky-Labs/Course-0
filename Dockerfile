@@ -11,6 +11,8 @@ RUN python3 huggingface.py
 
 # Set offline ENV after we download
 ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
 # Copy runner script
 COPY runner.py ./workspace
 COPY symbols.txt ./workspace
